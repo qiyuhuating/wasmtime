@@ -3001,8 +3001,11 @@
 (rule 0 (lower (swizzle (ty_supported_vec ty) x y))
   (rv_vrgather_vv x y (unmasked) ty))
 
+;; `swizzle` uses unsigned i8 indexes. Narrow scalar values may have
+;; arbitrary upper bits in an X register, but `vrgather.vx` reads all XLEN
+;; bits for the index (unlike `vrgather.vv`, which reads 8-bit lanes).
 (rule 1 (lower (swizzle (ty_supported_vec ty) x (splat _ y)))
-  (rv_vrgather_vx x y (unmasked) ty))
+  (rv_vrgather_vx x (rv_andi y (imm12_const 255)) (unmasked) ty))
 
 (rule 2 (lower (swizzle (ty_supported_vec ty) x y))
   (if-let y_imm (replicated_uimm5 y))
